@@ -35,6 +35,10 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts
 # Salin seluruh isi proyek ke dalam container
 COPY . .
 
+# Pastikan file .env ada untuk Artisan. Buat dari .env.example jika belum ada.
+# Ini penting karena .env biasanya tidak di-commit ke Git.
+RUN cp .env.example .env
+
 # Penting: Set permissions untuk storage dan bootstrap/cache agar bisa ditulis
 # Ini harus dilakukan SETELAH 'COPY . .' dan SEBELUM perintah Artisan yang menulis file
 RUN chown -R www-data:www-data storage bootstrap/cache
