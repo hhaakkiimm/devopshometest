@@ -1,0 +1,57 @@
+# .github/workflows/ci-cd.yml
+name: CI/CD Pipeline Laravel Docker
+
+on:
+  push:
+    branches:
+      - main # Pipeline akan berjalan saat ada push ke branch 'main'
+
+jobs:
+  build-and-push-docker:
+    runs-on: ubuntu-latest # Jalankan job di Ubuntu terbaru
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # Mengambil kode repositori
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2" # Sesuaikan dengan versi PHP di Dockerfile Anda
+          extensions: pdo_mysql, mbstring, exif, pcntl, bcmath, gd # Ekstensi PHP yang dibutuhkan
+          tools: composer # Menginstal Composer
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader # Menginstal dependensi Composer
+
+      # --- Opsi: Jika Anda memiliki PHPUnit tests, aktifkan bagian ini ---
+      # - name: Run PHPUnit tests
+      #   run: |
+      #     cp .env.example .env
+      #     php artisan key:generate
+      #     # php artisan migrate --force # Hanya jika Anda ingin menjalankan migrasi saat testing
+      #     vendor/bin/phpunit
+      # ------------------------------------------------------------------
+      - name: Build Docker image
+        run: |
+          # Penting: Ganti 'YOUR_DOCKERHUB_USERNAME/devopshometest' dengan username Docker Hub dan nama repo Anda
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/devopshometest:latest .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/devopshometest:${{ github.sha }} .
+        # Perintah ini membangun image Docker dengan dua tag: 'latest' dan tag berdasarkan SHA commit
+        # Pastikan Dockerfile Anda ada di root proyek
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push Docker image to Docker Hub
+        run: |
+          # Penting: Ganti 'YOUR_DOCKERHUB_USERNAME/devopshometest' dengan username Docker Hub dan nama repo Anda
+          docker push ${{ secrets.DOCKER_USERNAME }}/devopshometest:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/devopshometest:${{ github.sha }}
+        # Mendorong image ke Docker Hub
