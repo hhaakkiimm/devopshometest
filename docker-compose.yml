@@ -1,0 +1,30 @@
+# docker-compose.yml
+version: "3.8"
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: devopshometest-app:latest # Nama image Docker Anda (sesuaikan)
+        restart: unless-stopped
+        volumes:
+            - .:/var/www/html # Mount kode lokal ke container
+        networks:
+            - app-network
+
+    nginx:
+        image: nginx:alpine # Menggunakan Nginx versi ringan
+        restart: unless-stopped
+        ports:
+            - "8000:80" # Map port 8000 di host ke port 80 di container Nginx
+        volumes:
+            - .:/var/www/html # Mounting kode aplikasi
+            - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf # Konfigurasi Nginx kustom
+        depends_on:
+            - app # Nginx akan menunggu 'app' (PHP-FPM) siap
+        networks:
+            - app-network
+
+networks:
+    app-network:
+        driver: bridge
