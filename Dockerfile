@@ -39,6 +39,9 @@ COPY . .
 # Ini penting karena .env biasanya tidak di-commit ke Git.
 RUN cp .env.example .env
 
+# Buat file database SQLite kosong jika menggunakan koneksi sqlite default
+RUN touch database/database.sqlite
+
 # Penting: Set permissions untuk storage dan bootstrap/cache agar bisa ditulis
 # Ini harus dilakukan SETELAH 'COPY . .' dan SEBELUM perintah Artisan yang menulis file
 RUN chown -R www-data:www-data storage bootstrap/cache
